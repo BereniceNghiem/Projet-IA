@@ -1,0 +1,6 @@
+opencv-python --prefer-binary
+Pillow
+git+https://www.github.com/keras-team/keras-contrib.git
+matplotlib
+scikit-learn
+scikit-image
