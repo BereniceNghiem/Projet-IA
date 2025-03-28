@@ -8,6 +8,57 @@ from functools import partial
 
 import tensorflow as tf
 
+# bibliothèques adaptées à Tensorflow 2.10.0
+from tensorflow.keras.models import Model, Sequential, load_model
+from tensorflow.keras.layers import (Layer, Input, Conv2D, MaxPooling2D,
+                                     ZeroPadding2D, BatchNormalization,
+                                     UpSampling2D, Activation, Reshape,
+                                     Dropout, Concatenate, Lambda, Multiply,
+                                     Add, Flatten, Dense, LeakyReLU, PReLU)
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
+
+import matplotlib.pyplot as plt
+plt.switch_backend('agg')
+
+import cv2
+from sklearn.utils import shuffle
+import random
+import datetime
+import math
+
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.applications.vgg19 import VGG19
+from tensorflow.keras.applications.resnet50 import ResNet50
+
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
+from skimage.metrics import structural_similarity as compare_ssim
+from scipy.stats import pearsonr
+
+
+class InstanceNormalization(Layer):
+    def __init__(self, epsilon=1e-5, **kwargs):
+        super(InstanceNormalization, self).__init__(**kwargs)
+        self.epsilon = epsilon
+
+    def build(self, input_shape):
+        self.gamma = self.add_weight(shape=(input_shape[-1],),
+                                     initializer="ones",
+                                     trainable=True,
+                                     name="gamma")
+        self.beta = self.add_weight(shape=(input_shape[-1],),
+                                    initializer="zeros",
+                                    trainable=True,
+                                    name="beta")
+        super(InstanceNormalization, self).build(input_shape)
+
+    def call(self, inputs):
+        mean, variance = tf.nn.moments(inputs, axes=[1, 2], keepdims=True)
+        return self.gamma * (inputs - mean) / tf.sqrt(variance + self.epsilon) + self.beta
+
+strategy = tf.distribute.MirroredStrategy()  #pour remplacer multi_gpu_model
+
+'''
 from keras.models import Model, Sequential, load_model
 from keras.layers.merge import _Merge
 from keras.layers import Input, Conv2D, MaxPooling2D, ZeroPadding2D, Conv2D, BatchNormalization, UpSampling2D, Activation
@@ -30,7 +81,7 @@ import math
 from skimage.measure import compare_psnr, compare_ssim
 from keras.utils import multi_gpu_model
 from scipy.stats import pearsonr
-
+'''
 
 def load_confocal(input_shape=None, set=None, z_depth=None):
     # dir = '/home/sudong/confocal/' + set
@@ -116,7 +167,8 @@ def load_confocal(input_shape=None, set=None, z_depth=None):
     print(hrhq_test.shape)
     return hrhq_train, hrhq_test, lrhq_train, lrhq_test, hrlq_train, hrlq_test, lrlq_train, lrlq_test
 
-class RandomWeightedAverage(_Merge):
+#class RandomWeightedAverage(_Merge):
+class RandomWeightedAverage(Layer):
     """Provides a (random) weighted average between real and generated image samples"""
 
     def define_batch_size(self, bs):
@@ -143,22 +195,115 @@ class StarGAN(object):
 
         self.n_residual_blocks = 9
 
+        with strategy.scope():
+            optimizer = Adam(0.0001, 0.5, 0.99)
+
+            # We use a pre-trained VGG19 model to extract image features from the high resolution
+            # and the generated high resolution images and minimize the mse between them
+            self.vgg_hq = self.build_vgg_hr(name='vgg_hq')
+            self.vgg_hq.trainable = False
+
+            self.vgg_hq_m = self.vgg_hq
+            self.vgg_hq_m.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
+
+            self.vgg_lq = self.build_vgg_hr(name='vgg_lq')
+            self.vgg_lq.trainable = False
+
+            self.vgg_lq_m = self.vgg_lq
+            self.vgg_lq_m.compile(loss='mse', optimizer=optimizer, metrics=['accuracy'])
+
+            # Calculate output shape of D (PatchGAN)
+            patch_hr_h = int(self.hr_height / 2 ** 4)
+            patch_hr_w = int(self.hr_width / 2 ** 4)
+            self.disc_patch_hr = (patch_hr_h, patch_hr_w, 1)
+
+            # Number of filters in the first layer of G and D
+            self.gf = 64
+            self.df = 64
+
+            self.discriminator_hq = self.build_discriminator(name='dis_hq')
+            self.discriminator_hq_m = self.discriminator_hq
+            self.discriminator_hq_m.compile(loss='mse',
+                                            optimizer=optimizer,
+                                            metrics=['accuracy'])
+            
+            self.discriminator_lq = self.build_discriminator(name='dis_lq')
+            self.discriminator_lq_m = self.discriminator_lq
+            self.discriminator_lq_m.compile(loss='mse',
+                                            optimizer=optimizer,
+                                            metrics=['accuracy'])
+            
+            
+            # Build the generator
+            self.generator_lq2hq = self.build_generator(name='gen_lq2hq')
+            self.generator_hq2lq = self.build_generator(name='gen_hq2lq')
+
+            # High res. and low res. images
+            # img_hrhq = Input(shape=self.hr_shape)
+            img_lq = Input(shape=self.hr_shape)
+            img_hq = Input(shape=self.hr_shape)
+
+            fake_hq = self.generator_lq2hq(img_lq)
+            fake_lq = self.generator_hq2lq(img_hq)
+
+            reconstr_lq = self.generator_hq2lq(fake_hq)
+            reconstr_hq = self.generator_lq2hq(fake_lq)
+
+            img_lq_id = self.generator_hq2lq(img_lq)
+            img_hq_id = self.generator_lq2hq(img_hq)
+
+            fake_hq_features = self.vgg_hq(fake_hq)
+            fake_lq_features = self.vgg_lq(fake_lq)
+
+            reconstr_hq_features = self.vgg_hq(reconstr_hq)
+            reconstr_lq_features = self.vgg_lq(reconstr_lq)
+
+            self.discriminator_hq.trainable = False
+            self.discriminator_lq.trainable = False
+
+            validity_hq = self.discriminator_hq(fake_hq)
+            validity_lq = self.discriminator_lq(fake_lq)
+
+            validity_reconstr_hq = self.discriminator_hq(reconstr_hq)
+            validity_reconstr_lq = self.discriminator_lq(reconstr_lq)
+
+            self.combined_hq = Model([img_lq, img_hq], [validity_hq, validity_reconstr_lq,
+                                                    fake_hq_features, reconstr_lq_features, img_lq_id])
+            self.combined_hq_m = self.combined_hq
+            self.combined_hq_m.compile(loss=['mse', 'mse', 'mse', 'mse', 'mse'],
+                                    loss_weights=[1e-3, 1e-3, 1, 1, 1],
+                                    optimizer=optimizer)
+
+            self.combined_lq = Model([img_lq, img_hq], [validity_lq, validity_reconstr_hq,
+                                                    fake_lq_features, reconstr_hq_features, img_hq_id])
+            self.combined_lq_m = self.combined_lq
+            self.combined_lq_m.compile(loss=['mse', 'mse', 'mse', 'mse', 'mse'],
+                                    loss_weights=[1e-3, 1e-3, 1, 1, 1],
+                                    optimizer=optimizer)
+
+        
+        '''
         optimizer = Adam(0.0001, 0.5, 0.99)
 
         # We use a pre-trained VGG19 model to extract image features from the high resolution
         # and the generated high resolution images and minimize the mse between them
         self.vgg_hq = self.build_vgg_hr(name='vgg_hq')
         self.vgg_hq.trainable = False
-        self.vgg_hq_m = multi_gpu_model(self.vgg_hq, gpus=2) #gpus=3
+        
+        
+        self.vgg_hq_m = multi_gpu_model(self.vgg_hq, gpus=3) 
         self.vgg_hq_m.compile(loss='mse',
                          optimizer=optimizer,
                          metrics=['accuracy'])
+        
         self.vgg_lq = self.build_vgg_hr(name='vgg_lq')
         self.vgg_lq.trainable = False
-        self.vgg_lq_m = multi_gpu_model(self.vgg_lq, gpus=2) #gpus=3
+        
+        self.vgg_lq_m = multi_gpu_model(self.vgg_lq, gpus=3) 
         self.vgg_lq_m.compile(loss='mse',
                          optimizer=optimizer,
                          metrics=['accuracy'])
+
 
         # Calculate output shape of D (PatchGAN)
         patch_hr_h = int(self.hr_height / 2 ** 4)
@@ -170,12 +315,14 @@ class StarGAN(object):
         self.df = 64
 
         self.discriminator_hq = self.build_discriminator(name='dis_hq')
-        self.discriminator_hq_m = multi_gpu_model(self.discriminator_hq, gpus=2) #gpus=3
+        self.discriminator_hq_m = multi_gpu_model(self.discriminator_hq, gpus=3) 
         self.discriminator_hq_m.compile(loss='mse',
                                    optimizer=optimizer,
                                    metrics=['accuracy'])
+
+
         self.discriminator_lq = self.build_discriminator(name='dis_lq')
-        self.discriminator_lq_m = multi_gpu_model(self.discriminator_lq, gpus=2) #gpus=3
+        self.discriminator_lq_m = multi_gpu_model(self.discriminator_lq, gpus=3) 
         self.discriminator_lq_m.compile(loss='mse',
                                    optimizer=optimizer,
                                    metrics=['accuracy'])
@@ -215,17 +362,21 @@ class StarGAN(object):
 
         self.combined_hq = Model([img_lq, img_hq], [validity_hq, validity_reconstr_lq,
                                                     fake_hq_features, reconstr_lq_features, img_lq_id])
-        self.combined_hq_m = multi_gpu_model(self.combined_hq, gpus=2) #gpus=4
+        
+        self.combined_hq_m = multi_gpu_model(self.combined_hq, gpus=4) 
         self.combined_hq_m.compile(loss=['mse', 'mse', 'mse', 'mse', 'mse'],
                                    loss_weights=[1e-3, 1e-3, 1, 1, 1],
                                    optimizer=optimizer)
+
         self.combined_lq = Model([img_lq, img_hq], [validity_lq, validity_reconstr_hq,
                                                     fake_lq_features, reconstr_hq_features, img_hq_id])
-        self.combined_lq_m = multi_gpu_model(self.combined_lq, gpus=2)  #gpus=4
+        self.combined_lq_m = multi_gpu_model(self.combined_lq, gpus=4)  
         self.combined_lq_m.compile(loss=['mse', 'mse', 'mse', 'mse', 'mse'],
                                    loss_weights=[1e-3, 1e-3, 1, 1, 1],
                                    optimizer=optimizer)
+        '''
 
+            
     def build_vgg_hr(self, name=None):
         """
         Builds a pre-trained VGG19 model that outputs image features extracted at the
@@ -234,6 +385,8 @@ class StarGAN(object):
         # vgg = VGG16(include_top=False, weights="/home/amax/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5")
         # vgg.outputs = [vgg.layers[8].output]
         #vgg = VGG19(include_top=False, weights="/home/sudong/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5")
+        # gpt : vgg = VGG19(include_top=False, weights="imagenet", input_shape=(512, 512, 3))
+        '''
         vgg = VGG19(include_top=False, weights="/home/ids/bnghiem-23/Projet-IA-Telecom-Paris/COMI-drive/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5")
         vgg.outputs = [vgg.layers[9].output]
         img = Input(shape=self.hr_shape)
@@ -244,6 +397,18 @@ class StarGAN(object):
         model = Model(img, img_features, name=name)
         model.summary()
         return model
+        '''
+
+        # Définir une entrée d'image
+        img_input = Input(shape=(512, 512, 3))
+        # Charger VGG19 sans le top
+        vgg_base = VGG19(include_top=False, weights='imagenet', input_tensor=img_input)
+        # Définir un nouveau modèle dont la sortie est une couche intermédiaire (ex: 9)
+        vgg = Model(inputs=vgg_base.input, outputs=vgg_base.layers[9].output)
+        # Appliquer le modèle
+        img_features = vgg(img_input)
+        vgg.summary()
+        return vgg
 
 
     def build_generator(self, name=None):
