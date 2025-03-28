@@ -10,7 +10,7 @@ pi-ddpm/plot_figs.py
 pi-ddpm/imgs_output/
 pi-ddpm/scripts/testing_scripts/tester_diffusion.py
 pi-ddpm/scripts/training_scripts/
-
+pi-ddpm/data
 
 # environnement virtuel béré
 COMI/my_env/  

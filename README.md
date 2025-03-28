@@ -10,6 +10,7 @@ Blurring artefacts are common in microscopy images. Such artefacts are sometimes
 
 ### With Tensorflow:
 [1] CycleGAN: https://github.com/jiangdat/COMI
+
 [2] Dataset: https://data.mendeley.com/datasets/m3jxgb54c9/4
 
 [3] pi-ddpm: https://github.com/casus/pi-ddpm
