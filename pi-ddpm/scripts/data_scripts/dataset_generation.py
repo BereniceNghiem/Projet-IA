@@ -311,14 +311,42 @@ def generate_w2s_dataset(base_path, p_size=256):
     np.savez('/media/gabriel/data_hdd/w2s_test.npz', x=XTrain, y=YTrain)
 
 
-#generate_w2s_dataset('/media/gabriel/data_hdd/W2S_raw')
+generate_w2s_dataset('/home/ids/bnghiem-23/Projet-IA-Telecom-Paris/pi-ddpm/data/W2S_raw')
 
-sample, sample_w, proj, psf, psf_w = generate_synthetic_sample(
-    shape_img=(32, 128, 128),
-    shape_kernel=(16, 64, 64),
-    numerical_aperture=1.4,
-    refractive_index=1.33,
-    excitation_wavelength=488,
-    emission_wavelength=520,
-    pinhole_size=1.0
-)
+# sample, sample_w, proj, psf, psf_w = generate_synthetic_sample(
+#     shape_img=(32, 128, 128),
+#     shape_kernel=(16, 64, 64),
+#     numerical_aperture=1.4,
+#     refractive_index=1.33,
+#     excitation_wavelength=488,
+#     emission_wavelength=520,
+#     pinhole_size=1.0
+# )
+
+
+# numerical_aperture = np.random.uniform(0.4, 1.0)
+# excitation_wavelength = np.random.uniform(0.32, 0.4)
+# emission_wavelength = np.random.uniform(0.45, 0.55)
+# pinhole_size = np.random.uniform(0.1, 1000)
+# focal_plane_shift = 0
+# refractive_index = 1.33
+# resolution = np.random.uniform(0.04 * kernel_shape[0] / 64,
+#                                 0.06 * kernel_shape[0] / 64)  # 64 sized kernel constants
+# zres = np.random.uniform(0.055 * kernel_shape[0] / 64,
+#                             0.068 * kernel_shape[0] / 64)  # 64 sized kernel constants
+
+# threshold = np.random.uniform(0.34, 0.36)
+# n_balls = np.random.randint(100, 200)
+
+# # Example usage
+# syn_sample, syn_sample_w, img_gray, psf, psf_w = generate_synthetic_sample(sample_shape, kernel_shape,
+#                                                                             numerical_aperture,
+#                                                                             refractive_index,
+#                                                                             excitation_wavelength,
+#                                                                             emission_wavelength,
+#                                                                             pinhole_size, resolution,
+#                                                                             zres, n_balls=n_balls,
+#                                                                             threshold=threshold,
+#                                                                             focal_plane_shift=focal_plane_shift,
+#                                                                             dataset_type='inet',
+#                                                                             im_net_paths=paths)
