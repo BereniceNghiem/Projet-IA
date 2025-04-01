@@ -1,8 +1,10 @@
 cupy_cuda11x==11.5.0
+#cupy_cuda11x==12.2.0
+einops
+
 h5py==3.7.0
 keras==2.10.0
 matplotlib==3.6.1
-mayavi==4.8.1
 natsort==8.3.1
 numpy==1.21.0
 opencv_python_headless==4.7.0.72
@@ -15,3 +17,5 @@ tensorflow_addons==0.18.0
 tifffile==2022.8.12
 tqdm==4.64.1
 vtk==9.2.6
+
+# conda install -c conda-forge mayavi==4.8.1

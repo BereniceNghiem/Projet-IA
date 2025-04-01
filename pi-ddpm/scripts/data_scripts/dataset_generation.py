@@ -16,7 +16,7 @@ import h5py
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 
 
 def disk_kernel(radius):
@@ -312,3 +312,13 @@ def generate_w2s_dataset(base_path, p_size=256):
 
 
 #generate_w2s_dataset('/media/gabriel/data_hdd/W2S_raw')
+
+sample, sample_w, proj, psf, psf_w = generate_synthetic_sample(
+    shape_img=(32, 128, 128),
+    shape_kernel=(16, 64, 64),
+    numerical_aperture=1.4,
+    refractive_index=1.33,
+    excitation_wavelength=488,
+    emission_wavelength=520,
+    pinhole_size=1.0
+)
