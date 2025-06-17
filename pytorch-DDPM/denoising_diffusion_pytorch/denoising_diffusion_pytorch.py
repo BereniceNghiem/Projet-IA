@@ -680,10 +680,10 @@ class GaussianDiffusion(Module):
         return pred_img, x_start
 
     @torch.inference_mode()
-    def p_sample_loop(self, shape, return_all_timesteps = False):
+    def p_sample_loop(self, shape, return_all_timesteps = False, x_start = None):
         batch, device = shape[0], self.device
 
-        img = torch.randn(shape, device = device)
+        img = x_start if x_start is not None else torch.randn(shape, device = device)
         imgs = [img]
 
         x_start = None
@@ -697,6 +697,26 @@ class GaussianDiffusion(Module):
 
         ret = self.unnormalize(ret)
         return ret
+    
+    @torch.no_grad()
+    def reconstruct(self, x_start, t_fixed=None):
+        """
+        Reconstruit une image en l'ayant d'abord bruitée, puis débruitée.
+        Si t_fixed est donné, le bruitage se fait à un pas de diffusion fixe.
+        Sinon, on échantillonne un pas t ~ U(0, T).
+        """
+        device = x_start.device
+
+        if t_fixed is not None:
+            t = torch.full((x_start.size(0),), t_fixed, device=device, dtype=torch.long)
+        else:
+            t = torch.randint(0, self.num_timesteps, (x_start.size(0),), device=device)
+
+        noisy = self.q_sample(x_start=x_start, t=t)
+
+        # Rediffusion complète à partir de l’image bruitée
+        x_recon = self.p_sample_loop(shape=noisy.shape, x_start=noisy)
+        return x_recon
 
     @torch.inference_mode()
     def ddim_sample(self, shape, return_all_timesteps = False):

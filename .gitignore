@@ -1,151 +1,120 @@
-# gitignore de pi-ddpm
-pi-ddpm/*.h5
-pi-ddpm/*.png
-**/__pycache__/
-**/.idea/
-pi-ddpm/*.jpg
-pi-ddpm/*.svg
-pi-ddpm/*.pdf
-pi-ddpm/plot_figs.py
-pi-ddpm/imgs_output/
-pi-ddpm/scripts/testing_scripts/tester_diffusion.py
-pi-ddpm/scripts/training_scripts/
-pi-ddpm/data
-
-# environnement virtuel béré
-COMI/my_env/  
-# Fichiers modèles TensorFlow/Keras
-COMI-drive/*.h5     
-# Dossier contenant le dataset      
-Dataset/                  
-
-
-# Byte-compiled / optimized / DLL files
+# === FICHIERS PYTHON À IGNORER ===
 __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# === ENVIRONNEMENTS VIRTUELS ===
 .env
-.venv
+.venv/
 env/
 venv/
 ENV/
 env.bak/
-venv.bak/  
+venv.bak/
+.python-version
 
-# Spyder project settings
+# === FICHIERS JUPYTER / IPYTHON ===
+.ipynb_checkpoints/
+
+# === FICHIERS TEMPORAIRES / CACHE / TEST ===
+*.log
+*.zip
+*.tar
+*.spec
+.cache/
+.tox/
+.nox/
+.pytest_cache/
+coverage.xml
+nosetests.xml
+*.cover
+*.py,cover
+.hypothesis/
+htmlcov/
+.mypy_cache/
+.pyre/
+dmypy.json
+.dmypy.json
+
+# === IMAGES / EXPORTS / SORTIES ===
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+*.tif
+*.tiff
+*.html
+
+# === FICHIERS DE MODÈLES / POIDS ===
+*.h5
+*.pth
+*.ckpt
+*.pb
+*.onnx
+
+# === DOSSIERS DE DONNÉES ET RÉSULTATS À IGNORER ===
+# (conserves les .py, ignore les données lourdes)
+datasets/
+Dataset/
+data/
+checkpoints/
+output/
+imgs_output/
+__results__/
+logs/
+
+# === IGNORER SPÉCIFIQUEMENT DANS TON PROJET ===
+pytorch-DDPM/Dataset/
+pytorch-DDPM/images/
+pytorch-DDPM/results/
+pytorch-cycleGAN/output/
+pytorch-cycleGAN/datasets/
+pi-ddpm/imgs_output/
+pi-ddpm/data/
+COMI-from-pytorch-cycleGAN/datasets/
+COMI-2-from-pytorch-cycleGAN/
+COMI/deblursrgan4__Z005_img/
+COMI/deblursrgan4__Z005_logs/
+COMI/deblursrgan4__Z005_weights/
+COMI/figure/
+COMI/testPicture/
+
+# === FICHIERS DE BUILD / DISTRIBUTION ===
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+develop-eggs/
+downloads/
+lib/
+lib64/
+parts/
+sdist/
+share/
+wheels/
+pip-wheel-metadata/
+setup.py
+MANIFEST
+*.manifest
+
+# === PROJETS DJANGO / FLASK / SCRAPY / PYBUILDER ===
+db.sqlite3*
+instance/
+.webassets-cache
+.scrapy/
+target/
+
+# === OUTILS DE DOC / SPHINX ===
+docs/_build/
+pi-ddpm/docs/_build/
+pi-ddpm/docs/Makefile
+pi-ddpm/docs/make.bat
+
+# === FICHIERS DE CONFIG / IDE ===
+.idea/
+.vscode/
 .spyderproject
 .spyproject
-
-# Rope project settings
 .ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/

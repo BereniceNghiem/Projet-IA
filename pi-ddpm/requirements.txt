@@ -1,5 +1,5 @@
-cupy_cuda12x==12.4.0
-#cupy_cuda11x==12.2.0
+#cupy_cuda12x==12.4.0
+cupy_cuda11x==11.5.0
 einops
 
 h5py==3.7.0
