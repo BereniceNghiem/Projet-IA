@@ -1,0 +1,6 @@
+/home/ids/bnghiem-23/Projet-IA-Telecom-Paris/pytorch-cycleGAN/utils.py:151: UserWarning: nn.init.normal is now deprecated in favor of nn.init.normal_.
+  torch.nn.init.normal(m.weight.data, 0.0, 0.02)
+/home/ids/bnghiem-23/miniconda3/envs/pytorch-cycleGAN/lib/python3.6/site-packages/torchvision/transforms/transforms.py:288: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/ids/bnghiem-23/miniconda3/envs/pytorch-cycleGAN/lib/python3.6/site-packages/torch/nn/modules/loss.py:520: UserWarning: Using a target size (torch.Size([1])) that is different to the input size (torch.Size([1, 1])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  return F.mse_loss(input, target, reduction=self.reduction)

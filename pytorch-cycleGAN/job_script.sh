@@ -21,7 +21,7 @@ srun python train.py \
   --epoch 0 \
   --n_epochs 100 \
   --batchSize 1 \
-  --dataroot datasets/horse2zebra \
+  --dataroot datasets/Leishmania \
   --lr 0.0002 \
   --decay_epoch 50 \
   --height 384 \

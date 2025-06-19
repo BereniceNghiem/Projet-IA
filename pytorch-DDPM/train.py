@@ -45,7 +45,7 @@ image_path = '/home/ids/bnghiem-23/Projet-IA-Telecom-Paris/pytorch-DDPM/Dataset/
 image_size = 128
 batch_size = 16  #32 pas adapté à P100 ou 3090
 num_steps = 10000
-save_every = 1000
+save_every = 500
 lr = 8e-5
 
 # === Préparation du dataset ===
