@@ -1,9 +1,9 @@
 # Projet-IA-Telecom-Paris
 
-## Title
+## Titre
 Correction du flou de défocalisation dans les images microscopiques à l’aide de modèles génératifs en deep learning
 
-## Summary
+## Résumé
 Les artefacts de flou sont fréquents dans les images acquises par microscopie, en particulier dans les applications biologiques où la mise au point peut varier localement. Ces dégradations, souvent liées à des limitations physiques ou techniques de l’acquisition, compromettent la lisibilité et l’extraction d’informations pertinentes. Dans certains cas, le flou n’affecte qu’une zone restreinte du champ de vision, ce qui rend sa correction encore plus délicate.
 
 
