@@ -37,7 +37,7 @@ dmypy.json
 .dmypy.json
 
 # === IMAGES / EXPORTS / SORTIES ===
-*.png
+#*.png
 *.jpg
 *.jpeg
 *.svg
